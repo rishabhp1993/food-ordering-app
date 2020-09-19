@@ -7,8 +7,7 @@ import IconButton from "@material-ui/core/IconButton";
 import FastfoodIcon from "@material-ui/icons/Fastfood";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import SearchIcon from "@material-ui/icons/Search";
-import InputBase from "@material-ui/core/InputBase";
-import TextField from '@material-ui/core/TextField';
+import TextField from "@material-ui/core/TextField";
 import {
   withStyles,
   createMuiTheme,
@@ -37,18 +36,18 @@ const styles = (theme) =>
     root: {
       flexGrow: 1,
     },
-    toolbar:{
+    toolbar: {
       [theme.breakpoints.down("md")]: {
-       flexWrap: "wrap",
-       flexDirection:"column",
-       alignItems:"flex-start"
-      }
+        flexWrap: "wrap",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      },
     },
-    grow:{
-      flexGrow:1,
+    grow: {
+      flexGrow: 1,
       [theme.breakpoints.down("md")]: {
-       display: "none",
-      }
+        display: "none",
+      },
     },
     searchIcon: {
       height: "100%",
@@ -67,28 +66,28 @@ const styles = (theme) =>
         width: "300px",
       },
       [theme.breakpoints.down("md")]: {
-        margin:theme.spacing(0, 0,2,0),
+        margin: theme.spacing(0, 0, 2, 0),
       },
     },
-   inputRoot: {
-      color: 'white',
-      width:"300px",
-      paddingLeft:"30px",
-      '&::placeholder': {
-      color:"white"
+    inputRoot: {
+      color: "white",
+      width: "300px",
+      paddingLeft: "30px",
+      "&::placeholder": {
+        color: "white",
+      },
+      "& .Mui-focused": {
+        borderColor: "white",
+      },
     },
-    "& .Mui-focused": {
-            borderColor: "white"
-        }      
+    inputFocused: {
+      borderBottom: "2px solid #fff",
     },
-    inputFocused:{
-      borderBottom:"2px solid #fff"
-    },
-    signinbutton:{
+    signinbutton: {
       [theme.breakpoints.down("md")]: {
-        margin:theme.spacing(0, 0,2,0),
+        margin: theme.spacing(0, 0, 2, 0),
       },
-    }
+    },
   });
 
 class Header extends Component {
@@ -112,19 +111,24 @@ class Header extends Component {
               >
                 <FastfoodIcon fontSize="large" />
               </IconButton>
-              
+
               <div className={classes.grow} />
-                <div className={classes.search}>
+              <div className={classes.search}>
                 <div className={classes.searchIcon}>
                   <SearchIcon />
                 </div>
-                <TextField id="standard-required" InputProps={{
-                classes: { input: classes.inputRoot,
-                           focused:classes.inputFocused}
-                }}
-                 placeholder="Search by Restraunt Name..." />
+                <TextField
+                  id="standard-required"
+                  InputProps={{
+                    classes: {
+                      input: classes.inputRoot,
+                      focused: classes.inputFocused,
+                    },
+                  }}
+                  placeholder="Search by Restraunt Name..."
+                />
               </div>
-               <div className={classes.grow} />
+              <div className={classes.grow} />
               <Button
                 variant="contained"
                 color="default"

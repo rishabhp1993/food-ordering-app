@@ -2,10 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
+import Header from "./screens/header/Header"
 
 ReactDOM.render(
     <div>
-        Food Ordering App
+        <Header></Header>
     </div>,
     document.getElementById('root')
 );
