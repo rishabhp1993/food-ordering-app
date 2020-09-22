@@ -75,10 +75,7 @@ const styles = (theme) =>
       paddingLeft: "30px",
       "&::placeholder": {
         color: "white",
-      },
-      "& .Mui-focused": {
-        borderColor: "white",
-      },
+      }
     },
     inputFocused: {
       borderBottom: "2px solid #fff",
