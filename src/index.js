@@ -1,16 +1,21 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import * as serviceWorker from './serviceWorker';
+import React from "react";
+import ReactDOM from "react-dom";
+import "./index.css";
+import * as serviceWorker from "./serviceWorker";
 import Header from "./screens/header/Header";
-import Home from "./screens/home/Home"
+import Home from "./screens/home/Home";
+import Details from "./screens/details/Details";
+import { BrowserRouter, Route } from "react-router-dom";
 
 ReactDOM.render(
+  <BrowserRouter>
     <div>
-        <Header></Header>
-        <Home></Home>
-    </div>,
-    document.getElementById('root')
+      <Header />
+      <Route path="/" exact component={Home} />
+      <Route path="/details" component={Details} />
+    </div>
+  </BrowserRouter>,
+  document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change

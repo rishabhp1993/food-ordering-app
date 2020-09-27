@@ -75,7 +75,7 @@ const styles = (theme) =>
       paddingLeft: "30px",
       "&::placeholder": {
         color: "white",
-      }
+      },
     },
     inputFocused: {
       borderBottom: "2px solid #fff",
