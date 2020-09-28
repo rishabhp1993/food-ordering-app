@@ -8,28 +8,8 @@ import FastfoodIcon from "@material-ui/icons/Fastfood";
 import AccountCircle from "@material-ui/icons/AccountCircle";
 import SearchIcon from "@material-ui/icons/Search";
 import TextField from "@material-ui/core/TextField";
-import {
-  withStyles,
-  createMuiTheme,
-  ThemeProvider,
-} from "@material-ui/core/styles";
-
-const outerTheme = createMuiTheme({
-  palette: {
-    primary: {
-      light: "#253338",
-      main: "#253338",
-      dark: "#253338",
-      contrastText: "#fff",
-    },
-    secondary: {
-      light: "#ddd",
-      main: "#ddd",
-      dark: "#ddd",
-      contrastText: "#000",
-    },
-  },
-});
+import { withStyles, ThemeProvider } from "@material-ui/core/styles";
+import outerTheme from "../../common/Theme";
 
 const styles = (theme) =>
   createStyles({

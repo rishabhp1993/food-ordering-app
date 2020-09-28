@@ -6,6 +6,7 @@ import Header from "./screens/header/Header";
 import Home from "./screens/home/Home";
 import Details from "./screens/details/Details";
 import { BrowserRouter, Route } from "react-router-dom";
+import "../node_modules/font-awesome/css/font-awesome.min.css";
 
 ReactDOM.render(
   <BrowserRouter>

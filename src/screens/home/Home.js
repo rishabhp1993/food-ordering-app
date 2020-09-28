@@ -22,8 +22,6 @@ const styles = (theme) =>
         padding: theme.spacing(2),
       },
     },
-
-    card: {},
     label: {
       backgroundColor: "orange",
       color: "#fff",
