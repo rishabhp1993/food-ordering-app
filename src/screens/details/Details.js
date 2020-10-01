@@ -20,7 +20,6 @@ import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import Badge from "@material-ui/core/Badge";
 import CardContent from "@material-ui/core/CardContent";
 import RemoveIcon from "@material-ui/icons/Remove";
-import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
 
 const styles = (theme) =>
@@ -70,7 +69,7 @@ class Details extends Component {
   render() {
     const { classes } = this.props;
     return (
-      <div>
+      <>
         <div className={classes.restdetailscont}>
           <Grid container spacing={4}>
             <Grid item xs={12} lg={3}>
@@ -274,7 +273,7 @@ class Details extends Component {
             </Grid>
           </Grid>
         </div>
-      </div>
+      </>
     );
   }
 }

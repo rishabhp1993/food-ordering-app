@@ -78,7 +78,7 @@ class Header extends Component {
     return (
       <div className={classes.root}>
         <ThemeProvider theme={outerTheme}>
-          <AppBar position="static" color="primary">
+          <AppBar position="static" style={{ background: "#253338" }}>
             <Toolbar className={classes.toolbar}>
               <IconButton
                 edge="start"

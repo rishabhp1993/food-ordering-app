@@ -1,0 +1,14 @@
+.displaybolck {
+  display: block;
+}
+
+.displaynone {
+  display: none;
+}
+
+.iconcolorgreen {
+  color: #2e8b57;
+}
+.iconcolordefault {
+  color: rgba(0, 0, 0, 0.54);
+}
