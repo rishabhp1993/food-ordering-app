@@ -8,6 +8,7 @@ import CardMedia from "@material-ui/core/CardMedia";
 import Typography from "@material-ui/core/Typography";
 import { createStyles } from "@material-ui/core/styles";
 import StarIcon from "@material-ui/icons/Star";
+import Header from "../header/Header";
 
 import { withStyles } from "@material-ui/core/styles";
 
@@ -44,6 +45,7 @@ class Home extends Component {
     super(props);
 
     this.state = {
+      searchtext: "ss",
       carddata: [
         {
           imageurl:
@@ -100,50 +102,76 @@ class Home extends Component {
           cost: 1200,
         },
       ],
+      filteredcards: [],
     };
+    this.handleSearchChange = this.handleSearchChange.bind(this);
+    this.filterCards = this.filterCards.bind(this);
   }
-
+  handleSearchChange(srchtxt) {
+    this.setState({ searchtext: srchtxt }, this.filterCards);
+  }
+  componentDidMount() {
+    this.setState({ filteredcards: this.state.carddata });
+  }
+  filterCards() {
+    let filterdata = this.state.carddata.filter((x) =>
+      x.title.toLowerCase().includes(this.state.searchtext.toLowerCase())
+    );
+    this.setState({ filteredcards: filterdata });
+  }
   render() {
     const { classes } = this.props;
     return (
-      <div className={classes.root}>
-        <Grid container spacing={3}>
-          {this.state.carddata.map((restourant) => (
-            <Grid item xs={12} sm={6} lg={3}>
-              <Card className={classes.card}>
-                <CardActionArea>
-                  <CardMedia
-                    className={classes.media}
-                    image={restourant.imageurl}
-                    title={restourant.title}
-                  />
-                  <CardContent>
-                    <Typography gutterBottom variant="h5" component="h2">
-                      {restourant.title}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      color="textSecondary"
-                      component="p"
-                    >
-                      {restourant.cuisine}
-                    </Typography>
-                  </CardContent>
-                </CardActionArea>
-                <CardActions style={{ justifyContent: "space-between" }}>
-                  <div color="secondary" className={classes.label}>
-                    <StarIcon className={classes.flexgrow}></StarIcon>
-                    <div className={classes.flexgrow}>
-                      {restourant.rating + "(" + restourant.ratingcount + ")"}
+      <>
+        <Header searchhandler={this.handleSearchChange} />
+        <div className={classes.root}>
+          <Grid container spacing={3}>
+            <Typography
+              className={
+                this.state.filteredcards.length === 0
+                  ? "displayblock"
+                  : "displaynone"
+              }
+            >
+              No restaurants with the given name.
+            </Typography>
+            {this.state.filteredcards.map((restourant) => (
+              <Grid item xs={12} sm={6} lg={3}>
+                <Card className={classes.card}>
+                  <CardActionArea>
+                    <CardMedia
+                      className={classes.media}
+                      image={restourant.imageurl}
+                      title={restourant.title}
+                    />
+                    <CardContent>
+                      <Typography gutterBottom variant="h5" component="h2">
+                        {restourant.title}
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="textSecondary"
+                        component="p"
+                      >
+                        {restourant.cuisine}
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                  <CardActions style={{ justifyContent: "space-between" }}>
+                    <div color="secondary" className={classes.label}>
+                      <StarIcon className={classes.flexgrow}></StarIcon>
+                      <div className={classes.flexgrow}>
+                        {restourant.rating + "(" + restourant.ratingcount + ")"}
+                      </div>
                     </div>
-                  </div>
-                  <Typography>{"₹" + restourant.cost + " for 2"}</Typography>
-                </CardActions>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </div>
+                    <Typography>{"₹" + restourant.cost + " for 2"}</Typography>
+                  </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </div>
+      </>
     );
   }
 }

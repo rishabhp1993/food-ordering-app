@@ -1,0 +1,11 @@
+.displaybolck {
+  display: block;
+}
+
+.displaynone {
+  display: none !important;
+}
+
+.green {
+  color: #2e8b57;
+}
