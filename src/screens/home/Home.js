@@ -8,9 +8,9 @@ import CardMedia from "@material-ui/core/CardMedia";
 import Typography from "@material-ui/core/Typography";
 import { createStyles } from "@material-ui/core/styles";
 import StarIcon from "@material-ui/icons/Star";
-import Header from "../header/Header";
-
+import { Link } from "react-router-dom";
 import { withStyles } from "@material-ui/core/styles";
+import { constants } from "../../common/util";
 
 const styles = (theme) =>
   createStyles({
@@ -38,6 +38,12 @@ const styles = (theme) =>
     media: {
       height: 140,
     },
+    cardcontrol: {
+      minHeight: "100px",
+    },
+    removelinkdec: {
+      textDecoration: "none",
+    },
   });
 
 class Home extends Component {
@@ -45,130 +51,99 @@ class Home extends Component {
     super(props);
 
     this.state = {
-      searchtext: "ss",
-      carddata: [
-        {
-          imageurl:
-            "https://techcrunch.com/wp-content/uploads/2019/08/GettyImages-664302116.jpg?w=1390&crop=1",
-          title: "Ohri's Rubayat",
-          cuisine: "Chinese",
-          rating: 4.8,
-          ratingcount: 25,
-          cost: 450,
-        },
-        {
-          imageurl:
-            "https://www.thenewsminute.com/sites/default/files/styles/news_detail/public/restaurant_2_0.jpg?itok=O-ku-c9X",
-          title: "Kitchen Kingt",
-          cuisine: "North Indian",
-          rating: 4.2,
-          ratingcount: 48,
-          cost: 600,
-        },
-        {
-          imageurl:
-            "https://media.timeout.com/images/105239239/1372/772/image.jpg",
-          title: "Night Sky",
-          cuisine: "Arabian, Nort Indian, Continental",
-          rating: 3.9,
-          ratingcount: 12,
-          cost: 900,
-        },
-        {
-          imageurl:
-            "https://media-cdn.tripadvisor.com/media/photo-s/0c/4c/6d/98/photo1jpg.jpg",
-          title: "13 Dhaba",
-          cuisine: "Chinese",
-          rating: 3.2,
-          ratingcount: 92,
-          cost: 800,
-        },
-        {
-          imageurl:
-            "https://media-cdn.tripadvisor.com/media/photo-s/04/96/fb/89/african-queen.jpg",
-          title: "Mustang",
-          cuisine: "Indian, Drinks",
-          rating: 4.7,
-          ratingcount: 43,
-          cost: 1200,
-        },
-        {
-          imageurl:
-            "https://img.etimg.com/thumb/msid-70709213,width-300,imgsize-786355,,resizemode-4,quality-100/restaurant-bccl.jpg",
-          title: "Sky High",
-          cuisine: "Snacks, Drinks, Sweet Dish",
-          rating: 4.1,
-          ratingcount: 12,
-          cost: 1200,
-        },
-      ],
-      filteredcards: [],
+      searchtext: "",
+      carddata: [],
     };
-    this.handleSearchChange = this.handleSearchChange.bind(this);
     this.filterCards = this.filterCards.bind(this);
+    this.getAllRestaurants = this.getAllRestaurants.bind(this);
   }
-  handleSearchChange(srchtxt) {
-    this.setState({ searchtext: srchtxt }, this.filterCards);
+  componentWillReceiveProps(nextProps) {
+    this.setState({ searchtext: nextProps.searchtxt }, this.filterCards);
   }
   componentDidMount() {
-    this.setState({ filteredcards: this.state.carddata });
+    this.getAllRestaurants();
+  }
+  getAllRestaurants() {
+    fetch(constants.baseurl + "/api/restaurant")
+      .then((response) => response.json())
+      .then((data) => this.setState({ carddata: data.restaurants }));
   }
   filterCards() {
-    let filterdata = this.state.carddata.filter((x) =>
-      x.title.toLowerCase().includes(this.state.searchtext.toLowerCase())
-    );
-    this.setState({ filteredcards: filterdata });
+    if (this.state.searchtext.trim() !== "") {
+      fetch(
+        constants.baseurl +
+          "/api/restaurant/name/" +
+          this.state.searchtext.trim()
+      )
+        .then((response) => response.json())
+        .then((data) => this.setState({ carddata: data.restaurants }))
+        .catch(this.setState({ carddata: null }));
+    } else {
+      this.getAllRestaurants();
+    }
   }
   render() {
     const { classes } = this.props;
     return (
       <>
-        <Header searchhandler={this.handleSearchChange} />
         <div className={classes.root}>
           <Grid container spacing={3}>
-            <Typography
-              className={
-                this.state.filteredcards.length === 0
-                  ? "displayblock"
-                  : "displaynone"
-              }
-            >
-              No restaurants with the given name.
-            </Typography>
-            {this.state.filteredcards.map((restourant) => (
-              <Grid item xs={12} sm={6} lg={3}>
-                <Card className={classes.card}>
-                  <CardActionArea>
-                    <CardMedia
-                      className={classes.media}
-                      image={restourant.imageurl}
-                      title={restourant.title}
-                    />
-                    <CardContent>
-                      <Typography gutterBottom variant="h5" component="h2">
-                        {restourant.title}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        component="p"
-                      >
-                        {restourant.cuisine}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                  <CardActions style={{ justifyContent: "space-between" }}>
-                    <div color="secondary" className={classes.label}>
-                      <StarIcon className={classes.flexgrow}></StarIcon>
-                      <div className={classes.flexgrow}>
-                        {restourant.rating + "(" + restourant.ratingcount + ")"}
-                      </div>
-                    </div>
-                    <Typography>{"₹" + restourant.cost + " for 2"}</Typography>
-                  </CardActions>
-                </Card>
-              </Grid>
-            ))}
+            {this.state.carddata === null ? (
+              <Typography>No restaurants with the given name.</Typography>
+            ) : (
+              <>
+                {this.state.carddata.map((restourant) => (
+                  <Grid item xs={12} sm={6} lg={3} key={restourant.id}>
+                    <Link
+                      className={classes.removelinkdec}
+                      to={`/details/${restourant.id}`}
+                    >
+                      <Card className={classes.card}>
+                        <CardActionArea>
+                          <CardMedia
+                            className={classes.media}
+                            image={restourant.photo_URL}
+                            title={restourant.restaurant_name}
+                          />
+                          <CardContent className={classes.cardcontrol}>
+                            <Typography
+                              gutterBottom
+                              variant="h5"
+                              component="h2"
+                            >
+                              {restourant.restaurant_name}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="textSecondary"
+                              component="p"
+                            >
+                              {restourant.categories.split(",").join(", ")}
+                            </Typography>
+                          </CardContent>
+                        </CardActionArea>
+                        <CardActions
+                          style={{ justifyContent: "space-between" }}
+                        >
+                          <div color="secondary" className={classes.label}>
+                            <StarIcon className={classes.flexgrow}></StarIcon>
+                            <div className={classes.flexgrow}>
+                              {restourant.customer_rating +
+                                "(" +
+                                restourant.number_customers_rated +
+                                ")"}
+                            </div>
+                          </div>
+                          <Typography>
+                            {"₹" + restourant.average_price + " for 2"}
+                          </Typography>
+                        </CardActions>
+                      </Card>
+                    </Link>
+                  </Grid>
+                ))}
+              </>
+            )}
           </Grid>
         </div>
       </>

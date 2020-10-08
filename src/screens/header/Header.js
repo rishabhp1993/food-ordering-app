@@ -22,6 +22,7 @@ import Typography from "@material-ui/core/Typography";
 import MenuItem from "@material-ui/core/MenuItem";
 import Menu from "@material-ui/core/Menu";
 import { Link } from "react-router-dom";
+import Snackbar from "@material-ui/core/Snackbar";
 
 const styles = (theme) =>
   createStyles({
@@ -107,11 +108,22 @@ class Header extends Component {
     this.state = {
       modalopen: false,
       tabNo: 0,
-      userid: null,
-      password: null,
+      userid: "",
+      password: "",
+      useridreq: false,
+      passwordreq: false,
       isloggedin: false,
       anchorEl: null,
       isopen: false,
+      firstname: null,
+      lastname: null,
+      email: null,
+      contactno: null,
+      setpassword: null,
+      incorrectcredentials: false,
+      invalidphoneno: false,
+      showmsg: false,
+      msg: "",
     };
     this.handleClose = this.handleClose.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
@@ -119,13 +131,20 @@ class Header extends Component {
     this.handleSearchKeyDown = this.handleSearchKeyDown.bind(this);
     this.handleUserIdChange = this.handleUserIdChange.bind(this);
     this.handlePasswordChange = this.handlePasswordChange.bind(this);
-    this.handleFormSubmit = this.handleFormSubmit.bind(this);
+    this.handleLoginFormSubmit = this.handleLoginFormSubmit.bind(this);
     this.handleCloseMenu = this.handleCloseMenu.bind(this);
     this.handleMenu = this.handleMenu.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
+    this.handleSignupSignupSubmit = this.handleSignupSignupSubmit.bind(this);
+    this.handleFirstNameChange = this.handleFirstNameChange.bind(this);
+    this.handleLastNameChange = this.handleLastNameChange.bind(this);
+    this.handleEmailChange = this.handleEmailChange.bind(this);
+    this.handleSetPasswordChange = this.handleSetPasswordChange.bind(this);
+    this.handleContactNoChange = this.handleContactNoChange.bind(this);
+    this.closeSuccessMsg = this.closeSuccessMsg.bind(this);
   }
   componentDidMount() {
-    if (localStorage.getItem("isLoggedIn")) {
+    if (sessionStorage.getItem("accesstoken") !== null) {
       this.setState({ isloggedin: true });
     } else {
       this.setState({ isloggedin: false });
@@ -134,16 +153,42 @@ class Header extends Component {
   handleOpen() {
     this.setState({ modalopen: true });
   }
-
   handleClose() {
-    this.setState({ modalopen: false });
+    this.setState({
+      modalopen: false,
+      userid: "",
+      password: "",
+      firstname: null,
+      lastname: null,
+      email: null,
+      contactno: null,
+      setpassword: null,
+      incorrectcredentials: false,
+      invalidphoneno: false,
+      useridreq: false,
+      passwordreq: false,
+    });
   }
   handleTabChange(event, tab) {
     this.setState({ tabNo: tab });
   }
-
   handleSearchKeyDown(event) {
     this.props.searchhandler(event.target.value);
+  }
+  handleFirstNameChange(e) {
+    this.setState({ firstname: e.target.value });
+  }
+  handleLastNameChange(e) {
+    this.setState({ lastname: e.target.value });
+  }
+  handleEmailChange(e) {
+    this.setState({ email: e.target.value });
+  }
+  handleSetPasswordChange(e) {
+    this.setState({ setpassword: e.target.value });
+  }
+  handleContactNoChange(e) {
+    this.setState({ contactno: e.target.value });
   }
   handleUserIdChange(e) {
     this.setState({ userid: e.target.value });
@@ -151,16 +196,109 @@ class Header extends Component {
   handlePasswordChange(e) {
     this.setState({ password: e.target.value });
   }
-  handleFormSubmit() {
-    if (this.state.userid == null) {
-      this.setState({ userid: "" });
+  handleLoginFormSubmit() {
+    if (this.state.userid === "") {
+      this.setState({ useridreq: true, invalidphoneno: false });
+    } else {
+      this.setState({ useridreq: false });
+      if (this.state.userid.length !== 10) {
+        this.setState({ invalidphoneno: true });
+      } else {
+        this.setState({ invalidphoneno: false });
+      }
     }
-    if (this.state.password == null) {
-      this.setState({ password: "" });
+
+    if (this.state.password === "") {
+      this.setState({ passwordreq: true });
+    } else {
+      this.setState({ passwordreq: false });
     }
-    if (this.state.userid === "admin" && this.state.password === "admin") {
-      localStorage.setItem("isLoggedIn", true);
-      this.setState({ isloggedin: true, modalopen: false });
+
+    if (this.state.password !== "" && this.state.userid !== "") {
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          Accept: "application/json;charset=UTF-8",
+          authorization: `Basic ${btoa(
+            this.state.userid + ":" + this.state.password
+          )}`,
+        },
+      };
+      fetch("http://192.168.0.106:8080/api/customer/login", requestOptions)
+        .then((response) => {
+          sessionStorage.setItem(
+            "accesstoken",
+            response.headers.get("access-token")
+          );
+          return response.json();
+        })
+        .then((data) => {
+          if (data.message === "LOGGED IN SUCCESSFULLY") {
+            this.setState({
+              isloggedin: true,
+              modalopen: false,
+              userdetails: data,
+              incorrectcredentials: false,
+              showmsg: true,
+              msg: data.message,
+              userid: "",
+              password: "",
+            });
+            setTimeout(this.closeSuccessMsg, 5000);
+          } else if (data.message === "Invalid Credentials") {
+            this.setState({ incorrectcredentials: true });
+          }
+        });
+    }
+  }
+
+  closeSuccessMsg() {
+    this.setState({ showmsg: false });
+  }
+  handleSignupSignupSubmit() {
+    if (this.state.firstname == null) {
+      this.setState({ firstname: "" });
+    }
+    if (this.state.lastname == null) {
+      this.setState({ lastname: "" });
+    }
+    if (this.state.email == null) {
+      this.setState({ email: "" });
+    }
+    if (this.state.setpassword == null) {
+      this.setState({ setpassword: "" });
+    }
+    if (this.state.contactno == null) {
+      this.setState({ contactno: "" });
+    }
+    if (
+      this.state.firstname !== null &&
+      this.state.lastname !== null &&
+      this.state.email !== null &&
+      this.state.setpassword !== null &&
+      this.state.contactno !== null &&
+      this.state.firstname !== "" &&
+      this.state.lastname !== "" &&
+      this.state.email !== "" &&
+      this.state.setpassword !== "" &&
+      this.state.contactno !== ""
+    ) {
+      console.log("sad");
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          Accept: "application/json;charset=UTF-8",
+        },
+      };
+      fetch("http://192.168.0.106:8080/api/customer/signup", requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.message === "CUSTOMER SUCCESSFULLY REGISTERED") {
+            this.setState({ msg: data.message, showmsg: true });
+          } else {
+            this.setState({ msg: data.message, showmsg: true });
+          }
+        });
     }
   }
   handleCloseMenu() {
@@ -170,13 +308,27 @@ class Header extends Component {
     this.setState({ anchorEl: e.currentTarget, isopen: true });
   }
   handleLogout() {
-    localStorage.removeItem("isLoggedIn");
-    this.setState({ isloggedin: false });
-    this.handleCloseMenu();
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        Accept: "application/json;charset=UTF-8",
+        authorization: sessionStorage.getItem("accesstoken"),
+      },
+    };
+    fetch("http://192.168.0.106:8080/api/customer/logout", requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.message === "LOGGED OUT SUCCESSFULLY") {
+          sessionStorage.removeItem("accesstoken");
+          this.setState({ isloggedin: false });
+          this.handleCloseMenu();
+        } else {
+        }
+      });
   }
   render() {
     const { classes } = this.props;
-    console.log(this.state);
+    console.log(this.props.match);
     return (
       <div className={classes.root}>
         <ThemeProvider theme={outerTheme}>
@@ -192,22 +344,24 @@ class Header extends Component {
               </IconButton>
 
               <div className={classes.grow} />
-              <div className={classes.search}>
-                <div className={classes.searchIcon}>
-                  <SearchIcon />
+              {window.location.pathname === "/" ? (
+                <div className={classes.search}>
+                  <div className={classes.searchIcon}>
+                    <SearchIcon />
+                  </div>
+                  <TextField
+                    id="standard-required"
+                    InputProps={{
+                      classes: {
+                        input: classes.inputRoot,
+                        focused: classes.inputFocused,
+                      },
+                    }}
+                    placeholder="Search by Restraunt Name..."
+                    onKeyUp={this.handleSearchKeyDown}
+                  />
                 </div>
-                <TextField
-                  id="standard-required"
-                  InputProps={{
-                    classes: {
-                      input: classes.inputRoot,
-                      focused: classes.inputFocused,
-                    },
-                  }}
-                  placeholder="Search by Restraunt Name..."
-                  onKeyUp={this.handleSearchKeyDown}
-                />
-              </div>
+              ) : null}
               <div className={classes.grow} />
               <Button
                 variant="contained"
@@ -299,28 +453,58 @@ class Header extends Component {
                       <div>
                         <TextField
                           onChange={this.handleUserIdChange}
-                          helperText={
-                            this.state.userid === "" ? "required" : ""
-                          }
                           label="Contact No"
                           required
                         />
                       </div>
+                      <span
+                        className={
+                          this.state.invalidphoneno === false
+                            ? "displaynone"
+                            : "displayblock errortext"
+                        }
+                      >
+                        Invalid Contact
+                      </span>
+                      <span
+                        className={
+                          this.state.useridreq === false
+                            ? "displaynone"
+                            : "displayblock errortext"
+                        }
+                      >
+                        required
+                      </span>
                       <div>
                         <TextField
                           onChange={this.handlePasswordChange}
                           type="password"
                           label="Password"
-                          helperText={
-                            this.state.password === "" ? "required" : ""
-                          }
                           required
                         />
                       </div>
+                      <span
+                        className={
+                          this.state.passwordreq === false
+                            ? "displaynone"
+                            : "displayblock errortext"
+                        }
+                      >
+                        required
+                      </span>
+                      <span
+                        className={
+                          this.state.incorrectcredentials === false
+                            ? "displaynone"
+                            : "displayblock errortext"
+                        }
+                      >
+                        Invalid Credentials
+                      </span>
                       <div style={{ textAlign: "center" }}>
                         <Button
                           variant="contained"
-                          onClick={this.handleFormSubmit}
+                          onClick={this.handleLoginFormSubmit}
                           color="primary"
                         >
                           LOGIN
@@ -333,38 +517,81 @@ class Header extends Component {
                       this.state.tabNo === 1 ? "displayblock" : "displaynone"
                     }
                   >
-                    <form className={classes.formcontrol}>
+                    <div className={classes.formcontrol}>
                       <div>
-                        <TextField label="First Name" required />
+                        <TextField
+                          helperText={
+                            this.state.firstname === "" ? "required" : ""
+                          }
+                          onChange={this.handleFirstNameChange}
+                          label="First Name"
+                          required
+                        />
                       </div>
                       <div>
-                        <TextField label="Last Name" required />
+                        <TextField
+                          helperText={
+                            this.state.lastname === "" ? "required" : ""
+                          }
+                          onChange={this.handleLastNameChange}
+                          label="Last Name"
+                          required
+                        />
                       </div>
                       <div>
-                        <TextField label="Email" required />
+                        <TextField
+                          helperText={this.state.email === "" ? "required" : ""}
+                          onChange={this.handleEmailChange}
+                          label="Email"
+                          required
+                        />
                       </div>
                       <div>
-                        <TextField type="password" label="Password" required />
+                        <TextField
+                          helperText={
+                            this.state.setpassword === "" ? "required" : ""
+                          }
+                          onChange={this.handleSetPasswordChange}
+                          type="password"
+                          label="Password"
+                          required
+                        />
                       </div>
                       <div>
                         <TextField
                           type="number"
+                          helperText={
+                            this.state.contactno === "" ? "required" : ""
+                          }
+                          onChange={this.handleContactNoChange}
                           label="Contact Number"
                           required
                         />
                       </div>
                       <div style={{ textAlign: "center" }}>
-                        <Button variant="contained" color="primary">
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={this.handleSignupSignupSubmit}
+                        >
                           SIGNUP
                         </Button>
                       </div>
-                    </form>
+                    </div>
                   </div>
                 </div>
               </Paper>
             </div>
           </Fade>
         </Modal>
+        <Snackbar
+          open={this.state.showmsg}
+          message={this.state.msg}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "left",
+          }}
+        />
       </div>
     );
   }
