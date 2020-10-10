@@ -35,8 +35,11 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import CardHeader from "@material-ui/core/CardHeader";
-import Box from "@material-ui/core/Box";
 import Divider from "@material-ui/core/Divider";
+import { constants } from "../../common/util";
+import FormHelperText from "@material-ui/core/FormHelperText";
+import Snackbar from "@material-ui/core/Snackbar";
+import { Redirect } from "react-router";
 
 const styles = (theme) =>
   createStyles({
@@ -85,49 +88,89 @@ class Checkout extends Component {
   constructor(props) {
     super();
     this.state = {
+      tileData: props.location.state.finalcart,
+      restname: props.location.state.restaurantname,
+      restid: props.location.state.restaurantid,
       activeStep: 0,
       tabNo: 0,
-      tileData: [
-        {
-          img: "image",
-          id: 1,
-        },
-        {
-          img: "image",
-          id: 2,
-        },
-        {
-          img: "image",
-          id: 3,
-        },
-      ],
-      selectedtile: 0,
+      selectedtile: "",
+      addresses: [],
+      states: [],
+      flatbuildingname: null,
+      locality: null,
+      adstate: null,
+      pincode: null,
+      city: null,
+      pincodehelper: "",
+      paymentmethods: [],
+      selectedpaymentmethod: "",
+      showmsg: false,
+      msg: "",
     };
     this.handleBack = this.handleBack.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.tileSelectHandler = this.tileSelectHandler.bind(this);
+    this.handleFlatBuildingChange = this.handleFlatBuildingChange.bind(this);
+    this.handleLocalityChange = this.handleLocalityChange.bind(this);
+    this.handlePincodeChange = this.handlePincodeChange.bind(this);
+    this.handleStateChange = this.handleStateChange.bind(this);
+    this.handleCityChange = this.handleCityChange.bind(this);
+    this.handleFormSubmit = this.handleFormSubmit.bind(this);
+    this.pmHandler = this.pmHandler.bind(this);
+    this.checkoutHandler = this.checkoutHandler.bind(this);
+    this.closeMsg = this.closeMsg.bind(this);
   }
 
-  getStepContent(step) {
-    switch (step) {
-      case 0:
-        return `For each ad campaign that you create, you can control how much
-              you're willing to spend on clicks and conversions, which networks
-              and geographical locations you want your ads to show on, and more.`;
-      case 1:
-        return "An ad group contains one or more ads which target a shared set of keywords.";
-      default:
-        return "Unknown step";
-    }
+  componentDidMount() {
+    this.getAllAddress();
+    this.getAllStates();
+    this.getAllPaymentMethods();
   }
-
+  closeMsg() {
+    setTimeout(() => this.setState({ showmsg: false }), 5000);
+  }
+  getAllAddress() {
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        Accept: "application/json;charset=UTF-8",
+        authorization: sessionStorage.getItem("accesstoken"),
+      },
+    };
+    fetch(constants.baseurl + "/api/address/customer", requestOptions)
+      .then((response) => response.json())
+      .then((data) => this.setState({ addresses: data.addresses }));
+  }
+  getAllStates() {
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        Accept: "application/json;charset=UTF-8",
+      },
+    };
+    fetch(constants.baseurl + "/api/states", requestOptions)
+      .then((response) => response.json())
+      .then((data) => this.setState({ states: data.states }));
+  }
+  getAllPaymentMethods() {
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        Accept: "application/json;charset=UTF-8",
+      },
+    };
+    fetch(constants.baseurl + "/api/payment", requestOptions)
+      .then((response) => response.json())
+      .then((data) => this.setState({ paymentmethods: data.paymentMethods }));
+  }
   handleNext() {
-    console.log(this.state);
-    this.setState({
-      activeStep: this.state.activeStep + 1,
-    });
+    if (this.state.tabNo === 0 && this.state.selectedtile !== "") {
+      this.setState({
+        activeStep: this.state.activeStep + 1,
+      });
+    }
   }
   handleBack() {
     this.setState({
@@ -142,273 +185,490 @@ class Checkout extends Component {
   handleChange(event, tab) {
     this.setState({ tabNo: tab });
   }
-  tileSelectHandler(tileno) {
-    this.setState({
-      selectedtile: tileno,
-    });
+  tileSelectHandler(id) {
+    this.setState({ selectedtile: id });
   }
-  handleFormSubmit() {}
+  handleFlatBuildingChange(e) {
+    this.setState({ flatbuildingname: e.target.value });
+  }
+  handleLocalityChange(e) {
+    this.setState({ locality: e.target.value });
+  }
+  handleCityChange(e) {
+    this.setState({ city: e.target.value });
+  }
+  handlePincodeChange(e) {
+    this.setState({ pincode: e.target.value });
+  }
+  handleStateChange(e) {
+    this.setState({ adstate: e.target.value });
+  }
+  handleFormSubmit() {
+    if (this.state.flatbuildingname == null) {
+      this.setState({ flatbuildingname: "" });
+    }
+    if (this.state.locality == null) {
+      this.setState({ locality: "" });
+    }
+    if (this.state.pincode == null || this.state.pincode == "") {
+      this.setState({ pincodehelper: "required" });
+    } else {
+      if (this.state.pincode.length !== 6) {
+        this.setState({
+          pincodehelper:
+            "Pincode must contain only numbers and must be 6 digits long",
+        });
+      } else {
+        this.setState({ pincodehelper: "required" });
+      }
+    }
+    if (this.state.city == null) {
+      this.setState({ city: "" });
+    }
+    if (this.state.adstate == null) {
+      this.setState({ adstate: "" });
+    }
+    if (
+      this.state.flatbuildingname !== null &&
+      this.state.locality !== null &&
+      this.state.pincode !== null &&
+      this.state.city !== null &&
+      this.state.adstate !== null &&
+      this.state.flatbuildingname !== "" &&
+      this.state.locality !== "" &&
+      this.state.pincode !== "" &&
+      this.state.city !== "" &&
+      this.state.pincode.length === 6 &&
+      this.state.adstate !== ""
+    ) {
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          Accept: "application/json;charset=UTF-8",
+          "Content-Type": "application/json",
+          authorization: sessionStorage.getItem("accesstoken"),
+        },
+        body: JSON.stringify({
+          city: this.state.city,
+          flat_building_name: this.state.flatbuildingname,
+          locality: this.state.locality,
+          pincode: this.state.pincode,
+          state_uuid: this.state.adstate,
+        }),
+      };
+      fetch(constants.baseurl + "/api/address", requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "ADDRESS SUCCESSFULLY REGISTERED") {
+            this.setState({
+              tabNo: 0,
+              flatbuildingname: null,
+              adstate: null,
+              city: null,
+              pincode: null,
+              locality: null,
+              pincodehelper: "",
+            });
+            this.getAllAddress();
+          } else {
+            alert(data.status);
+          }
+        });
+    }
+  }
+  pmHandler(e) {
+    this.setState({ selectedpaymentmethod: e.target.value });
+  }
+  checkoutHandler() {
+    if (
+      this.state.selectedpaymentmethod !== "" &&
+      this.state.selectedtile !== ""
+    ) {
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          Accept: "application/json;charset=UTF-8",
+          "Content-Type": "application/json",
+          authorization: `Bearer ${sessionStorage.getItem("accesstoken")}`,
+        },
+        body: JSON.stringify({
+          address_id: this.state.selectedtile,
+          bill: Number(
+            this.state.tileData.reduce(
+              (total, itement) => total + itement.quantity * itement.item.price,
+              0
+            )
+          ),
+
+          coupon_id: "2ddf6284-ecd0-11e8-8eb2-f2801f1b9fd1",
+          discount: 0.0,
+          item_quantities: this.state.tileData.map((singleitem) => ({
+            item_id: singleitem.item.id,
+            price: singleitem.item.price,
+            quantity: singleitem.quantity,
+          })),
+          payment_id: this.state.selectedpaymentmethod,
+          restaurant_id: this.state.restid,
+        }),
+      };
+      fetch(constants.baseurl + "/api/order", requestOptions)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "ORDER SUCCESSFULLY PLACED") {
+            this.setState({
+              showmsg: true,
+              msg: `Order placed successfully! Your order id is ${data.id}`,
+            });
+            this.closeMsg();
+          } else {
+            this.setState({
+              showmsg: true,
+              msg: `Unable to place your order. Please try again.`,
+            });
+            this.closeMsg();
+          }
+        });
+    } else {
+      this.setState({
+        showmsg: true,
+        msg: `Please select the required fields.`,
+      });
+      this.closeMsg();
+    }
+  }
 
   render() {
-    const { classes } = this.props;
-    console.log(this.state.selectedtile);
-    return (
-      <div className={classes.root}>
-        <Grid container spacing="4">
-          <Grid item lg={9} xs={12}>
-            <Stepper
-              activeStep={this.state.activeStep}
-              orientation="vertical"
-              style={{ padding: 0 }}
-            >
-              <Step key={0}>
-                <StepLabel>Delivery</StepLabel>
-                <StepContent>
-                  <AppBar position="static">
-                    <Tabs value={this.state.tabNo} onChange={this.handleChange}>
-                      <Tab label="EXISTING ADDRESS" />
-                      <Tab label="NEW ADDRESS" />
-                    </Tabs>
-                  </AppBar>
-                  <div
-                    className={
-                      this.state.tabNo === 0 ? "displayblock" : "displaynone"
-                    }
-                  >
-                    <GridList
-                      cellHeight={230}
-                      className={classes.gridList}
-                      cols={3}
-                    >
-                      {this.state.tileData.map((tile) => (
-                        <GridListTile className={classes.root}>
-                          <Card
-                            className={
-                              this.state.selectedtile === tile.id
-                                ? classes.cardselected
-                                : classes.card
-                            }
-                          >
-                            <CardContent>
-                              <Typography>Nishuvi, Ground Floor, 75</Typography>
-                              <Typography>
-                                Dr. Annie Basant Road, Worli
-                              </Typography>
-                              <Typography>Mumbai</Typography>
-                              <Typography>Maharashtra</Typography>
-                              <Typography>500032</Typography>
-                            </CardContent>
-                            <CardActions>
-                              <IconButton
-                                className={classes.alignright}
-                                key={tile.id}
-                                onClick={() => this.tileSelectHandler(tile.id)}
-                              >
-                                <CheckCircleIcon
-                                  className={
-                                    this.state.selectedtile === tile.id
-                                      ? "iconcolorgreen"
-                                      : "iconcolordefault"
-                                  }
-                                />
-                              </IconButton>
-                            </CardActions>
-                          </Card>
-                        </GridListTile>
-                      ))}
-                    </GridList>
-                  </div>
-                  <div
-                    className={
-                      this.state.tabNo === 1 ? "displayblock" : "displaynone"
-                    }
-                  >
-                    <form
-                      className={classes.formcontrol}
-                      onSubmit={this.handleFormSubmit}
-                    >
-                      <div>
-                        <TextField label="Flat/ Buildnin No." required />
-                      </div>
-                      <div>
-                        <TextField label="Locality" required />
-                      </div>
-                      <div>
-                        <TextField label="City" required />
-                      </div>
-                      <div>
-                        <FormControl className={classes.formControl}>
-                          <InputLabel id="demo-simple-select-label">
-                            State
-                          </InputLabel>
-                          <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={""}
-                          >
-                            <MenuItem value={10}>Ten</MenuItem>
-                            <MenuItem value={20}>Twenty</MenuItem>
-                            <MenuItem value={30}>Thirty</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </div>
-                      <div>
-                        <TextField
-                          type="number"
-                          helperText="required"
-                          label="Pincode"
-                          required
-                        />
-                      </div>
-                      <Button
-                        variant="contained"
-                        type="submit"
-                        color="secondary"
-                      >
-                        SAVE ADDRESS
-                      </Button>
-                    </form>
-                  </div>
-                  <div className={classes.actionsContainer}>
-                    <div>
-                      <Button disabled onClick={this.handleBack}>
-                        Back
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={this.handleNext}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                </StepContent>
-              </Step>
-              <Step key={1}>
-                <StepLabel>Payment</StepLabel>
-                <StepContent>
-                  <form className={classes.formcontrol}>
-                    <FormControl component="fieldset">
-                      <FormLabel component="legend">
-                        Select Mode of Payment
-                      </FormLabel>
-                      <RadioGroup
-                        aria-label="payment"
-                        name="payment"
-                        value={"cod"}
-                      >
-                        <FormControlLabel
-                          value="cod"
-                          control={<Radio />}
-                          label="Cash on Delivery"
-                        />
-                        <FormControlLabel
-                          value="wallet"
-                          control={<Radio />}
-                          label="Wallet"
-                        />
-                        <FormControlLabel
-                          value="netbanking"
-                          control={<Radio />}
-                          label="Net Banking"
-                        />
-                        <FormControlLabel
-                          value="dcc"
-                          control={<Radio />}
-                          label="(Debit / Credit Card"
-                        />
-                      </RadioGroup>
-                    </FormControl>
-                  </form>
-                  <div className={classes.actionsContainer}>
-                    <div>
-                      <Button
-                        disabled={this.props.activeStep === 0}
-                        onClick={this.handleBack}
-                        className={classes.button}
-                      >
-                        Back
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={this.handleNext}
-                        className={classes.button}
-                      >
-                        Finish
-                      </Button>
-                    </div>
-                  </div>
-                </StepContent>
-              </Step>
-            </Stepper>
+    const isLoggedIn = sessionStorage.getItem("accesstoken");
 
-            {this.state.activeStep === 2 && (
-              <Paper square elevation={0} className={classes.resetContainer}>
-                <Typography>
-                  View the summary and place your order now!
-                </Typography>
-                <Button onClick={this.handleReset} className={classes.button}>
-                  CHANGE
-                </Button>
-              </Paper>
-            )}
-          </Grid>
-          <Grid item lg={3} xs={12}>
-            <Card>
-              <CardHeader
-                title={
-                  <Typography variant="h6" component="h2">
-                    Summary
-                  </Typography>
-                }
-                className={classes.nobotpad}
-              ></CardHeader>
-              <CardContent className={classes.notoppad}>
-                <List className={classes.nopad}>
-                  <Typography component="h3">Loud Silence</Typography>
-                  <ListItem className={classes.nopad}>
-                    <ListItemIcon>
-                      <i className="fa fa-stop-circle-o veg"></i>
-                    </ListItemIcon>
-                    <ListItemText primary="Pizza" />
-                    <ListItemText
-                      primary={
-                        <Box>
-                          <IconButton edge="end" aria-label="comments">
-                            <Typography>5</Typography>
-                          </IconButton>
-                        </Box>
+    const { classes } = this.props;
+    if (!isLoggedIn) {
+      return <Redirect to="/home" />;
+    } else {
+      return (
+        <div className={classes.root}>
+          <Grid container spacing="4">
+            <Grid item lg={9} xs={12}>
+              <Stepper
+                activeStep={this.state.activeStep}
+                orientation="vertical"
+                style={{ padding: 0 }}
+              >
+                <Step key={0}>
+                  <StepLabel>Delivery</StepLabel>
+                  <StepContent>
+                    <AppBar position="static">
+                      <Tabs
+                        value={this.state.tabNo}
+                        onChange={this.handleChange}
+                      >
+                        <Tab label="EXISTING ADDRESS" />
+                        <Tab label="NEW ADDRESS" />
+                      </Tabs>
+                    </AppBar>
+                    <div
+                      className={
+                        this.state.tabNo === 0 ? "displayblock" : "displaynone"
                       }
-                    />
-                    <ListItemSecondaryAction>
-                      <Typography>₹ 600</Typography>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                  <Divider />
-                  <ListItem className={classes.nopad}>
-                    <Typography>
-                      <b>TOTAL AMOUNT</b>
+                    >
+                      <GridList
+                        cellHeight={230}
+                        className={classes.gridList}
+                        cols={3}
+                      >
+                        {this.state.addresses.map((address) => (
+                          <GridListTile className={classes.root}>
+                            <Card
+                              className={
+                                this.state.selectedtile === address.id
+                                  ? classes.cardselected
+                                  : classes.card
+                              }
+                            >
+                              <CardContent>
+                                <Typography>
+                                  {address.flat_building_name}
+                                </Typography>
+                                <Typography>{address.locality}</Typography>
+                                <Typography>{address.city}</Typography>
+                                <Typography>
+                                  {address.state.state_name}
+                                </Typography>
+                                <Typography>{address.pincode}</Typography>
+                              </CardContent>
+                              <CardActions>
+                                <IconButton
+                                  className={classes.alignright}
+                                  key={address.id}
+                                  onClick={() =>
+                                    this.tileSelectHandler(address.id)
+                                  }
+                                >
+                                  <CheckCircleIcon
+                                    className={
+                                      this.state.selectedtile === address.id
+                                        ? "iconcolorgreen"
+                                        : "iconcolordefault"
+                                    }
+                                  />
+                                </IconButton>
+                              </CardActions>
+                            </Card>
+                          </GridListTile>
+                        ))}
+                      </GridList>
+                    </div>
+
+                    <div
+                      className={
+                        this.state.tabNo === 1 ? "displayblock" : "displaynone"
+                      }
+                    >
+                      <form className={classes.formcontrol}>
+                        <div>
+                          <TextField
+                            helperText={
+                              this.state.flatbuildingname === ""
+                                ? "required"
+                                : ""
+                            }
+                            onChange={this.handleFlatBuildingChange}
+                            label="Flat/ Buildnin No."
+                          />
+                        </div>
+                        <div>
+                          <TextField
+                            helperText={
+                              this.state.locality === "" ? "required" : ""
+                            }
+                            onChange={this.handleLocalityChange}
+                            label="Locality"
+                          />
+                        </div>
+                        <div>
+                          <TextField
+                            helperText={
+                              this.state.city === "" ? "required" : ""
+                            }
+                            label="City"
+                            onChange={this.handleCityChange}
+                          />
+                        </div>
+                        <div>
+                          <FormControl className={classes.formControl}>
+                            <InputLabel id="demo-simple-select-label">
+                              State
+                            </InputLabel>
+                            <Select
+                              labelId="demo-simple-select-label"
+                              id="demo-simple-select"
+                              value={this.state.adstate}
+                              onChange={this.handleStateChange}
+                              max={4}
+                            >
+                              {this.state.states.map((state) => (
+                                <MenuItem value={state.id}>
+                                  {state.state_name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            <FormHelperText>
+                              {this.state.adstate === "" ? "required" : ""}
+                            </FormHelperText>
+                          </FormControl>
+                        </div>
+                        <div>
+                          <TextField
+                            type="number"
+                            helperText="required"
+                            label="Pincode"
+                            helperText={this.state.pincodehelper}
+                            onChange={this.handlePincodeChange}
+                          />
+                        </div>
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          onClick={this.handleFormSubmit}
+                        >
+                          SAVE ADDRESS
+                        </Button>
+                      </form>
+                    </div>
+                    <div className={classes.actionsContainer}>
+                      <div>
+                        <Button disabled onClick={this.handleBack}>
+                          Back
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={this.handleNext}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  </StepContent>
+                </Step>
+                <Step key={1}>
+                  <StepLabel>Payment</StepLabel>
+                  <StepContent>
+                    <form className={classes.formcontrol}>
+                      <FormControl component="fieldset">
+                        <FormLabel component="legend">
+                          Select Mode of Payment
+                        </FormLabel>
+                        <RadioGroup
+                          aria-label="payment"
+                          name="payment"
+                          value={this.state.selectedpaymentmethod}
+                        >
+                          {this.state.paymentmethods.map((pm) => (
+                            <FormControlLabel
+                              value={pm.id}
+                              control={<Radio />}
+                              label={pm.payment_name}
+                              onClick={this.pmHandler}
+                            />
+                          ))}
+                        </RadioGroup>
+                      </FormControl>
+                    </form>
+                    <div className={classes.actionsContainer}>
+                      <div>
+                        <Button
+                          disabled={this.props.activeStep === 0}
+                          onClick={this.handleBack}
+                          className={classes.button}
+                        >
+                          Back
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          onClick={this.handleNext}
+                          className={classes.button}
+                        >
+                          Finish
+                        </Button>
+                      </div>
+                    </div>
+                  </StepContent>
+                </Step>
+              </Stepper>
+
+              {this.state.activeStep === 2 && (
+                <Paper square elevation={0} className={classes.resetContainer}>
+                  <Typography>
+                    View the summary and place your order now!
+                  </Typography>
+                  <Button onClick={this.handleReset} className={classes.button}>
+                    CHANGE
+                  </Button>
+                </Paper>
+              )}
+            </Grid>
+            <Grid item lg={3} xs={12}>
+              <Card>
+                <CardHeader
+                  title={
+                    <Typography variant="h6" component="h2">
+                      Summary
                     </Typography>
-                    <ListItemSecondaryAction>
-                      <Typography>
-                        <b>₹ 600</b>
+                  }
+                  className={classes.nobotpad}
+                  style={{ paddingBottom: "0px" }}
+                ></CardHeader>
+                <CardContent className={classes.notoppad}>
+                  <List className={classes.nopad}>
+                    <ListItem>
+                      <Typography component="h3">
+                        {this.state.restname}
                       </Typography>
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                </List>
-              </CardContent>
-              <CardContent>
-                <Button fullWidth variant="contained" color="primary">
-                  Checkout
-                </Button>
-              </CardContent>
-            </Card>
+                    </ListItem>
+                    {this.state.tileData.map((cartitem) => (
+                      <ListItem className={classes.nopad}>
+                        <Grid item lg={1}>
+                          <ListItemIcon style={{ minWidth: "0px" }}>
+                            <i
+                              className={
+                                cartitem.item.item_type === "VEG"
+                                  ? "fa fa-stop-circle-o veg"
+                                  : "fa fa-stop-circle-o nonveg"
+                              }
+                            ></i>
+                          </ListItemIcon>
+                        </Grid>
+                        <Grid item lg={7}>
+                          <ListItemText primary={cartitem.item.item_name} />
+                        </Grid>
+                        <Grid item lg={2}>
+                          <ListItemText
+                            primary={
+                              <Typography>{cartitem.quantity}</Typography>
+                            }
+                          />
+                        </Grid>
+                        <Grid item lg={2}>
+                          <ListItemSecondaryAction>
+                            <Typography>
+                              ₹{" "}
+                              {(
+                                cartitem.item.price * cartitem.quantity
+                              ).toFixed(2)}
+                            </Typography>
+                          </ListItemSecondaryAction>
+                        </Grid>
+                      </ListItem>
+                    ))}
+                  </List>
+                  <Divider />
+                  <List>
+                    <ListItem className={classes.nopad}>
+                      <Typography>
+                        <b>TOTAL AMOUNT</b>
+                      </Typography>
+                      <ListItemSecondaryAction>
+                        <Typography>
+                          <b>
+                            ₹{" "}
+                            {this.state.tileData
+                              .reduce(
+                                (total, itement) =>
+                                  total + itement.quantity * itement.item.price,
+                                0
+                              )
+                              .toFixed(2)}
+                          </b>
+                        </Typography>
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  </List>
+                </CardContent>
+                <CardContent>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={this.checkoutHandler}
+                  >
+                    Checkout
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-        </Grid>
-      </div>
-    );
+          <Snackbar
+            open={this.state.showmsg}
+            message={this.state.msg}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
+          />
+        </div>
+      );
+    }
   }
 }
 

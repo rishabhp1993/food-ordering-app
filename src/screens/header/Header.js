@@ -23,6 +23,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Menu from "@material-ui/core/Menu";
 import { Link } from "react-router-dom";
 import Snackbar from "@material-ui/core/Snackbar";
+import { constants } from "../../common/util";
 
 const styles = (theme) =>
   createStyles({
@@ -86,6 +87,9 @@ const styles = (theme) =>
     paper: {
       border: 0,
       outline: "0",
+      [theme.breakpoints.down("sm")]: {
+        width: "90%",
+      },
     },
     modalcontent: {
       padding: theme.spacing(2),
@@ -124,6 +128,7 @@ class Header extends Component {
       invalidphoneno: false,
       showmsg: false,
       msg: "",
+      userdetails: null,
     };
     this.handleClose = this.handleClose.bind(this);
     this.handleOpen = this.handleOpen.bind(this);
@@ -154,6 +159,7 @@ class Header extends Component {
     this.setState({ modalopen: true });
   }
   handleClose() {
+    console.log("exe");
     this.setState({
       modalopen: false,
       userid: "",
@@ -224,7 +230,7 @@ class Header extends Component {
           )}`,
         },
       };
-      fetch("http://192.168.0.106:8080/api/customer/login", requestOptions)
+      fetch(`${constants.baseurl}/api/customer/login`, requestOptions)
         .then((response) => {
           sessionStorage.setItem(
             "accesstoken",
@@ -234,10 +240,10 @@ class Header extends Component {
         })
         .then((data) => {
           if (data.message === "LOGGED IN SUCCESSFULLY") {
+            sessionStorage.setItem("username", data.first_name);
             this.setState({
               isloggedin: true,
               modalopen: false,
-              userdetails: data,
               incorrectcredentials: false,
               showmsg: true,
               msg: data.message,
@@ -283,20 +289,32 @@ class Header extends Component {
       this.state.setpassword !== "" &&
       this.state.contactno !== ""
     ) {
-      console.log("sad");
       const requestOptions = {
         method: "POST",
         headers: {
           Accept: "application/json;charset=UTF-8",
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          contact_number: this.state.contactno,
+          email_address: this.state.email,
+          first_name: this.state.firstname,
+          last_name: this.state.lastname,
+          password: this.state.setpassword,
+        }),
       };
-      fetch("http://192.168.0.106:8080/api/customer/signup", requestOptions)
+      fetch(`${constants.baseurl}/api/customer/signup`, requestOptions)
         .then((response) => response.json())
         .then((data) => {
-          if (data.message === "CUSTOMER SUCCESSFULLY REGISTERED") {
-            this.setState({ msg: data.message, showmsg: true });
+          if (data.status === "CUSTOMER SUCCESSFULLY REGISTERED") {
+            console.log("asd");
+            this.setState({
+              showmsg: true,
+              msg: data.status,
+              modalopen: false,
+            });
           } else {
-            this.setState({ msg: data.message, showmsg: true });
+            this.setState({ msg: data.status, showmsg: true });
           }
         });
     }
@@ -315,14 +333,16 @@ class Header extends Component {
         authorization: sessionStorage.getItem("accesstoken"),
       },
     };
-    fetch("http://192.168.0.106:8080/api/customer/logout", requestOptions)
+    fetch(`${constants.baseurl}/api/customer/logout`, requestOptions)
       .then((response) => response.json())
       .then((data) => {
         if (data.message === "LOGGED OUT SUCCESSFULLY") {
           sessionStorage.removeItem("accesstoken");
+          sessionStorage.removeItem("username");
           this.setState({ isloggedin: false });
           this.handleCloseMenu();
         } else {
+          alert(data.message);
         }
       });
   }
@@ -334,14 +354,16 @@ class Header extends Component {
         <ThemeProvider theme={outerTheme}>
           <AppBar position="static" style={{ background: "#253338" }}>
             <Toolbar className={classes.toolbar}>
-              <IconButton
-                edge="start"
-                className={classes.menuButton}
-                color="inherit"
-                aria-label="menu"
-              >
-                <FastfoodIcon fontSize="large" />
-              </IconButton>
+              <Link to={"/"}>
+                <IconButton
+                  edge="start"
+                  className={classes.menuButton}
+                  color="inherit"
+                  aria-label="menu"
+                >
+                  <FastfoodIcon style={{ color: "#fff" }} fontSize="large" />
+                </IconButton>
+              </Link>
 
               <div className={classes.grow} />
               {window.location.pathname === "/" ? (
@@ -363,17 +385,19 @@ class Header extends Component {
                 </div>
               ) : null}
               <div className={classes.grow} />
-              <Button
-                variant="contained"
-                color="default"
-                startIcon={<AccountCircle />}
-                onClick={this.handleOpen}
-                className={
-                  this.state.isloggedin ? "displaynone" : "displayblock"
-                }
-              >
-                Login
-              </Button>
+              <div style={{ margin: "10px 0" }}>
+                <Button
+                  variant="contained"
+                  color="default"
+                  startIcon={<AccountCircle />}
+                  onClick={this.handleOpen}
+                  className={
+                    this.state.isloggedin ? "displaynone" : "displayblock"
+                  }
+                >
+                  Login
+                </Button>
+              </div>
               <div>
                 <IconButton
                   className={
@@ -387,7 +411,9 @@ class Header extends Component {
                   onClick={this.handleMenu}
                 >
                   <AccountCircleIcon />
-                  <Typography style={{ marginLeft: "5px" }}>UpGrad</Typography>
+                  <Typography style={{ marginLeft: "5px" }}>
+                    {sessionStorage.getItem("username")}
+                  </Typography>
                 </IconButton>
                 <Menu
                   id="menu-appbar"

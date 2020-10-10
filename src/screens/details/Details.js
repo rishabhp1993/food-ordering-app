@@ -22,6 +22,7 @@ import CardContent from "@material-ui/core/CardContent";
 import RemoveIcon from "@material-ui/icons/Remove";
 import Button from "@material-ui/core/Button";
 import Snackbar from "@material-ui/core/Snackbar";
+import { constants } from "../../common/util";
 
 const styles = (theme) =>
   createStyles({
@@ -106,7 +107,8 @@ class Details extends Component {
     this.setIsLoaded = this.setIsLoaded.bind(this);
     this.addItemHandler = this.addItemHandler.bind(this);
     this.substractItemHandler = this.substractItemHandler.bind(this);
-    this.closeSuccessMsg = this.closeSuccessMsg.bind(this);
+    this.closeMsg = this.closeMsg.bind(this);
+    this.checkoutHandler = this.checkoutHandler.bind(this);
   }
   handleAddItemToCart(e) {
     let dataitemid = e.currentTarget.getAttribute("data-itemid");
@@ -131,7 +133,7 @@ class Details extends Component {
         let obj = { item: doublefilter[0], quantity: 1 };
         this.state.cart.push(obj);
         this.setState({ cart: this.state.cart, showmsg: true });
-        setTimeout(this.closeSuccessMsg, 5000);
+        setTimeout(this.closeMsg, 5000);
       }
     } else {
       let obj = { item: doublefilter[0], quantity: 1 };
@@ -141,13 +143,12 @@ class Details extends Component {
         showmsg: true,
         msg: "Item added to cart!",
       });
-      setTimeout(this.closeSuccessMsg, 5000);
+      this.closeMsg();
     }
   }
   componentDidMount() {
     fetch(
-      "http://192.168.0.106:8080/api/restaurant/" +
-        this.props.match.params.restaurantid
+      `${constants.baseurl}/api/restaurant/${this.props.match.params.restaurantid}`
     )
       .then((response) => response.json())
       .then((data) => this.setState({ restdetails: data }, this.setIsLoaded));
@@ -164,7 +165,7 @@ class Details extends Component {
       ),
     }));
     this.setState({ showmsg: true, msg: "Item quantity increased by 1!" });
-    setTimeout(this.closeSuccessMsg, 5000);
+    setTimeout(this.closeMsg, 5000);
   }
   substractItemHandler(e) {
     let dataitemid = e.currentTarget.getAttribute("data-itemid");
@@ -176,19 +177,41 @@ class Details extends Component {
         ),
       }));
       this.setState({ showmsg: true, msg: "Item quantity decreased by 1!" });
-      setTimeout(this.closeSuccessMsg, 5000);
+      setTimeout(this.closeMsg, 5000);
     } else {
       this.setState((prevState) => ({
         cart: prevState.cart.filter((x) => x.item.id !== dataitemid),
       }));
     }
   }
-  closeSuccessMsg() {
-    this.setState({ showmsg: false });
+  closeMsg() {
+    setTimeout(() => this.setState({ showmsg: false }), 5000);
+  }
+  checkoutHandler() {
+    if (sessionStorage.getItem("accesstoken")) {
+      if (this.state.cart.length !== 0) {
+        this.props.history.push({
+          pathname: "/checkout",
+          state: {
+            finalcart: this.state.cart,
+            restaurantname: this.state.restdetails.restaurant_name,
+            restaurantid: this.state.restdetails.id,
+          },
+        });
+      } else {
+        this.setState({
+          showmsg: true,
+          msg: "Please add an item to your cart!",
+        });
+        this.closeMsg();
+      }
+    } else {
+      this.setState({ showmsg: true, msg: "Please Login to Checkout" });
+      this.closeMsg();
+    }
   }
   render() {
     const { classes } = this.props;
-    console.log(this.props.match.params.restaurantid);
     return this.state.isLoaded === true ? (
       <>
         <div className={classes.restdetailscont}>
@@ -280,30 +303,38 @@ class Details extends Component {
                     <Divider />
                     {csngrp.item_list.map((itemgrp) => (
                       <ListItem key={itemgrp.id}>
-                        <ListItemIcon>
-                          <i
-                            className={
-                              itemgrp.item_type === "VEG"
-                                ? "fa fa-circle veg"
-                                : " fa fa-circle nonveg"
-                            }
-                          ></i>
-                        </ListItemIcon>
-                        <ListItemText
-                          color={"textSecondary"}
-                          primary={itemgrp.item_name}
-                        />
-                        <Typography>₹ {itemgrp.price}</Typography>
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            edge="end"
-                            data-cuisineid={csngrp.id}
-                            data-itemid={itemgrp.id}
-                            onClick={this.handleAddItemToCart}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        </ListItemSecondaryAction>
+                        <Grid lg={1}>
+                          <ListItemIcon>
+                            <i
+                              className={
+                                itemgrp.item_type === "VEG"
+                                  ? "fa fa-circle veg"
+                                  : " fa fa-circle nonveg"
+                              }
+                            ></i>
+                          </ListItemIcon>
+                        </Grid>
+                        <Grid lg={9}>
+                          <ListItemText
+                            color={"textSecondary"}
+                            primary={itemgrp.item_name}
+                          />
+                        </Grid>
+                        <Grid lg={1}>
+                          <Typography>₹ {itemgrp.price}</Typography>
+                        </Grid>
+                        <Grid lg={1}>
+                          <ListItemSecondaryAction>
+                            <IconButton
+                              edge="end"
+                              data-cuisineid={csngrp.id}
+                              data-itemid={itemgrp.id}
+                              onClick={this.handleAddItemToCart}
+                            >
+                              <AddIcon />
+                            </IconButton>
+                          </ListItemSecondaryAction>
+                        </Grid>
                       </ListItem>
                     ))}
                   </div>
@@ -410,7 +441,13 @@ class Details extends Component {
                   </List>
                 </CardContent>
                 <CardContent>
-                  <Button fullWidth variant="contained" color="primary">
+                  <Button
+                    cart={this.state.cart}
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    onClick={this.checkoutHandler}
+                  >
                     Checkout
                   </Button>
                 </CardContent>
