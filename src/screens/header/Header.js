@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import Snackbar from "@material-ui/core/Snackbar";
 import { constants } from "../../common/util";
 
+//Styles
 const styles = (theme) =>
   createStyles({
     root: {
@@ -149,17 +150,21 @@ class Header extends Component {
     this.closeSuccessMsg = this.closeSuccessMsg.bind(this);
   }
   componentDidMount() {
+    //Checking if access token is available
     if (sessionStorage.getItem("accesstoken") !== null) {
+      //Setting state to logged in
       this.setState({ isloggedin: true });
     } else {
+      //Setting state to logged out
       this.setState({ isloggedin: false });
     }
   }
+  //Metod to handle modal popup open
   handleOpen() {
     this.setState({ modalopen: true });
   }
+  //Metod to handle modal popup close
   handleClose() {
-    console.log("exe");
     this.setState({
       modalopen: false,
       userid: "",
@@ -175,38 +180,49 @@ class Header extends Component {
       passwordreq: false,
     });
   }
+  //Metod to handle cahnging of tabs in login/signup modal
   handleTabChange(event, tab) {
     this.setState({ tabNo: tab });
   }
+  //Metod to handle search input
   handleSearchKeyDown(event) {
     this.props.searchhandler(event.target.value);
   }
+  //Metod to handle change in first name
   handleFirstNameChange(e) {
     this.setState({ firstname: e.target.value });
   }
+  //Metod to handle change in last name
   handleLastNameChange(e) {
     this.setState({ lastname: e.target.value });
   }
+  //Metod to handle change in email
   handleEmailChange(e) {
     this.setState({ email: e.target.value });
   }
+  //Metod to handle password change
   handleSetPasswordChange(e) {
     this.setState({ setpassword: e.target.value });
   }
+  //Metod to handle change in contact no.
   handleContactNoChange(e) {
     this.setState({ contactno: e.target.value });
   }
+  //Metod to handle change in user id
   handleUserIdChange(e) {
     this.setState({ userid: e.target.value });
   }
+  //Metod to handle password change
   handlePasswordChange(e) {
     this.setState({ password: e.target.value });
   }
+  //Metod to handle Login form submit
   handleLoginFormSubmit() {
     if (this.state.userid === "") {
       this.setState({ useridreq: true, invalidphoneno: false });
     } else {
       this.setState({ useridreq: false });
+      //Checking if phone number is less than 10 digits
       if (this.state.userid.length !== 10) {
         this.setState({ invalidphoneno: true });
       } else {
@@ -230,8 +246,10 @@ class Header extends Component {
           )}`,
         },
       };
+      //Calling Login API
       fetch(`${constants.baseurl}/api/customer/login`, requestOptions)
         .then((response) => {
+          //Setting access token
           sessionStorage.setItem(
             "accesstoken",
             response.headers.get("access-token")
@@ -257,10 +275,11 @@ class Header extends Component {
         });
     }
   }
-
+  //Metod to handle Success Login message
   closeSuccessMsg() {
     this.setState({ showmsg: false });
   }
+  //Metod to handle Signup form submit
   handleSignupSignupSubmit() {
     if (this.state.firstname == null) {
       this.setState({ firstname: "" });
@@ -303,28 +322,31 @@ class Header extends Component {
           password: this.state.setpassword,
         }),
       };
+      //Calling Signup API
       fetch(`${constants.baseurl}/api/customer/signup`, requestOptions)
         .then((response) => response.json())
         .then((data) => {
           if (data.status === "CUSTOMER SUCCESSFULLY REGISTERED") {
-            console.log("asd");
             this.setState({
               showmsg: true,
               msg: data.status,
               modalopen: false,
             });
           } else {
-            this.setState({ msg: data.status, showmsg: true });
+            this.setState({ msg: data.message, showmsg: true });
           }
         });
     }
   }
+  //Metod to clsoe message
   handleCloseMenu() {
     this.setState({ anchorEl: null, isopen: false });
   }
+  //Metod to handle menu
   handleMenu(e) {
     this.setState({ anchorEl: e.currentTarget, isopen: true });
   }
+  //Metod to handle logout
   handleLogout() {
     const requestOptions = {
       method: "POST",
@@ -348,7 +370,6 @@ class Header extends Component {
   }
   render() {
     const { classes } = this.props;
-    console.log(this.props.match);
     return (
       <div className={classes.root}>
         <ThemeProvider theme={outerTheme}>
