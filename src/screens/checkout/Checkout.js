@@ -86,11 +86,12 @@ const styles = (theme) =>
 
 class Checkout extends Component {
   constructor(props) {
+    console.log(props);
     super();
     this.state = {
-      tileData: props.location.state.finalcart,
-      restname: props.location.state.restaurantname,
-      restid: props.location.state.restaurantid,
+      tileData: [],
+      restname: null,
+      restid: null,
       activeStep: 0,
       tabNo: 0,
       selectedtile: "",
@@ -106,6 +107,8 @@ class Checkout extends Component {
       selectedpaymentmethod: "",
       showmsg: false,
       msg: "",
+      disableplaceorderbtn: false,
+      isLoggedIn: true,
     };
     this.handleBack = this.handleBack.bind(this);
     this.handleReset = this.handleReset.bind(this);
@@ -124,10 +127,21 @@ class Checkout extends Component {
   }
 
   componentDidMount() {
-    this.getAllAddress();
-    this.getAllStates();
-    this.getAllPaymentMethods();
+    if (this.props.location.state) {
+      this.getAllAddress();
+      this.getAllStates();
+      this.getAllPaymentMethods();
+      this.setState({
+        tileData: this.props.location.state.finalcart,
+        restname: this.props.location.state.restaurantname,
+        restid: this.props.location.state.restaurantid,
+        isLoggedIn: true,
+      });
+    } else {
+      this.setState({ isLoggedIn: false });
+    }
   }
+  componentWillMount() {}
   closeMsg() {
     setTimeout(() => this.setState({ showmsg: false }), 5000);
   }
@@ -318,7 +332,9 @@ class Checkout extends Component {
             this.setState({
               showmsg: true,
               msg: `Order placed successfully! Your order id is ${data.id}`,
+              disableplaceorderbtn: true,
             });
+
             this.closeMsg();
           } else {
             this.setState({
@@ -338,12 +354,8 @@ class Checkout extends Component {
   }
 
   render() {
-    const isLoggedIn = sessionStorage.getItem("accesstoken");
-
     const { classes } = this.props;
-    if (!isLoggedIn) {
-      return <Redirect to="/home" />;
-    } else {
+    if (this.state.isLoggedIn) {
       return (
         <div className={classes.root}>
           <Grid container spacing="4">
@@ -375,6 +387,17 @@ class Checkout extends Component {
                         className={classes.gridList}
                         cols={3}
                       >
+                        <div
+                          className={
+                            this.state.addresses.length === 0
+                              ? "displblock"
+                              : "displaynone"
+                          }
+                        >
+                          <Typography>
+                            No address added. Please add a new address.
+                          </Typography>
+                        </div>
                         {this.state.addresses.map((address) => (
                           <GridListTile className={classes.root}>
                             <Card
@@ -647,6 +670,7 @@ class Checkout extends Component {
                 </CardContent>
                 <CardContent>
                   <Button
+                    disabled={this.state.disableplaceorderbtn}
                     fullWidth
                     variant="contained"
                     color="primary"
@@ -668,6 +692,8 @@ class Checkout extends Component {
           />
         </div>
       );
+    } else {
+      return <Redirect to="/home" />;
     }
   }
 }
