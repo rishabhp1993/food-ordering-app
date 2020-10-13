@@ -86,7 +86,6 @@ const styles = (theme) =>
 
 class Checkout extends Component {
   constructor(props) {
-    console.log(props);
     super();
     this.state = {
       tileData: [],
@@ -127,7 +126,7 @@ class Checkout extends Component {
   }
 
   componentDidMount() {
-    if (this.props.location.state) {
+    if (this.props.location.state && sessionStorage.getItem("accesstoken")) {
       this.getAllAddress();
       this.getAllStates();
       this.getAllPaymentMethods();
@@ -141,7 +140,6 @@ class Checkout extends Component {
       this.setState({ isLoggedIn: false });
     }
   }
-  componentWillMount() {}
   closeMsg() {
     setTimeout(() => this.setState({ showmsg: false }), 5000);
   }
@@ -218,13 +216,13 @@ class Checkout extends Component {
     this.setState({ adstate: e.target.value });
   }
   handleFormSubmit() {
-    if (this.state.flatbuildingname == null) {
+    if (this.state.flatbuildingname === null) {
       this.setState({ flatbuildingname: "" });
     }
-    if (this.state.locality == null) {
+    if (this.state.locality === null) {
       this.setState({ locality: "" });
     }
-    if (this.state.pincode == null || this.state.pincode == "") {
+    if (this.state.pincode === null || this.state.pincode === "") {
       this.setState({ pincodehelper: "required" });
     } else {
       if (this.state.pincode.length !== 6) {
@@ -236,10 +234,10 @@ class Checkout extends Component {
         this.setState({ pincodehelper: "required" });
       }
     }
-    if (this.state.city == null) {
+    if (this.state.city === null) {
       this.setState({ city: "" });
     }
-    if (this.state.adstate == null) {
+    if (this.state.adstate === null) {
       this.setState({ adstate: "" });
     }
     if (
@@ -358,7 +356,7 @@ class Checkout extends Component {
     if (this.state.isLoggedIn) {
       return (
         <div className={classes.root}>
-          <Grid container spacing="4">
+          <Grid container spacing={4}>
             <Grid item lg={9} xs={12}>
               <Stepper
                 activeStep={this.state.activeStep}
@@ -399,7 +397,10 @@ class Checkout extends Component {
                           </Typography>
                         </div>
                         {this.state.addresses.map((address) => (
-                          <GridListTile className={classes.root}>
+                          <GridListTile
+                            key={address.id}
+                            className={classes.root}
+                          >
                             <Card
                               className={
                                 this.state.selectedtile === address.id
@@ -484,12 +485,15 @@ class Checkout extends Component {
                             <Select
                               labelId="demo-simple-select-label"
                               id="demo-simple-select"
-                              value={this.state.adstate}
+                              value={
+                                this.state.adstate === null
+                                  ? ""
+                                  : this.state.adstate
+                              }
                               onChange={this.handleStateChange}
-                              max={4}
                             >
                               {this.state.states.map((state) => (
-                                <MenuItem value={state.id}>
+                                <MenuItem key={state.id} value={state.id}>
                                   {state.state_name}
                                 </MenuItem>
                               ))}
@@ -502,7 +506,6 @@ class Checkout extends Component {
                         <div>
                           <TextField
                             type="number"
-                            helperText="required"
                             label="Pincode"
                             helperText={this.state.pincodehelper}
                             onChange={this.handlePincodeChange}
@@ -552,6 +555,7 @@ class Checkout extends Component {
                               control={<Radio />}
                               label={pm.payment_name}
                               onClick={this.pmHandler}
+                              key={pm.id}
                             />
                           ))}
                         </RadioGroup>
@@ -610,7 +614,10 @@ class Checkout extends Component {
                       </Typography>
                     </ListItem>
                     {this.state.tileData.map((cartitem) => (
-                      <ListItem className={classes.nopad}>
+                      <ListItem
+                        key={cartitem.item.id}
+                        className={classes.nopad}
+                      >
                         <Grid item lg={1}>
                           <ListItemIcon style={{ minWidth: "0px" }}>
                             <i

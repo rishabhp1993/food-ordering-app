@@ -1,3 +1,3 @@
 export const constants = {
-  baseurl: "http://localhost:8080/",
+  baseurl: "http://192.168.0.106:8080/",
 };

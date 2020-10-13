@@ -11,6 +11,7 @@ class App extends Component {
     super();
     this.state = { searchtext: "" };
     this.handleSearchChange = this.handleSearchChange.bind(this);
+    console.log = console.warn = console.error = () => {};
   }
   handleSearchChange(srchtxt) {
     this.setState({ searchtext: srchtxt }, this.filterCards);
@@ -26,11 +27,25 @@ class App extends Component {
             <Route path="/" exact>
               <Home searchtxt={this.state.searchtext} />
             </Route>
-            <Route path="/details/:restaurantid" exact component={Details} />
-            <Route path="/checkout" component={Checkout} />
-            <Route path="/details" exact component={Home} />
-            <Route path="/profile" component={Profile} />
-            <Route path="/home" component={Home} />
+            <Route
+              path="/details/:restaurantid"
+              exact
+              component={(props) => <Details {...props} />}
+            />
+            <Route
+              path="/checkout"
+              component={(props) => <Checkout {...props} />}
+            />
+            <Route
+              path="/details"
+              exact
+              component={(props) => <Home {...props} />}
+            />
+            <Route
+              path="/profile"
+              component={(props) => <Profile {...props} />}
+            />
+            <Route path="/home" component={(props) => <Home {...props} />} />
           </Switch>
         </div>
       </BrowserRouter>

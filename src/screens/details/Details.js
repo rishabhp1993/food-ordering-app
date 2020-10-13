@@ -246,13 +246,13 @@ class Details extends Component {
               <Grid item>
                 <Typography variant="body1">
                   {this.state.restdetails.categories.map(
-                    (categories) => categories.category_name + "," + " "
+                    (categories) => `${categories.category_name}, `
                   )}
                 </Typography>
               </Grid>
               <Grid item>
                 <Grid container>
-                  <Grid xs={6} lg={6} md={6}>
+                  <Grid item xs={6} lg={6} md={6}>
                     <Box
                       display="flex"
                       flexWrap="wrap"
@@ -268,7 +268,7 @@ class Details extends Component {
                       {this.state.restdetails.number_customers_rated} CUSTOMERS
                     </Typography>
                   </Grid>
-                  <Grid xs={6} lg={6} md={6}>
+                  <Grid item xs={6} lg={6} md={6}>
                     <Box
                       display="flex"
                       flexWrap="wrap"
@@ -292,8 +292,8 @@ class Details extends Component {
           </Grid>
         </div>
         <div className={classes.restitemscont}>
-          <Grid container spacing="4">
-            <Grid item xs="12" lg="6">
+          <Grid container spacing={4}>
+            <Grid item xs={12} lg={6}>
               <List>
                 {this.state.restdetails.categories.map((csngrp) => (
                   <div key={csngrp.id}>
@@ -303,7 +303,7 @@ class Details extends Component {
                     <Divider />
                     {csngrp.item_list.map((itemgrp) => (
                       <ListItem key={itemgrp.id}>
-                        <Grid lg={1}>
+                        <Grid item lg={1}>
                           <ListItemIcon>
                             <i
                               className={
@@ -314,16 +314,16 @@ class Details extends Component {
                             ></i>
                           </ListItemIcon>
                         </Grid>
-                        <Grid lg={9}>
+                        <Grid item lg={9}>
                           <ListItemText
                             color={"textSecondary"}
                             primary={itemgrp.item_name}
                           />
                         </Grid>
-                        <Grid lg={1}>
+                        <Grid item lg={1}>
                           <Typography>₹ {itemgrp.price}</Typography>
                         </Grid>
-                        <Grid lg={1}>
+                        <Grid item lg={1}>
                           <ListItemSecondaryAction>
                             <IconButton
                               edge="end"
@@ -341,7 +341,7 @@ class Details extends Component {
                 ))}
               </List>
             </Grid>
-            <Grid item xs="12" lg="6">
+            <Grid item xs={12} lg={6}>
               <Card>
                 <CardHeader
                   avatar={
@@ -362,8 +362,11 @@ class Details extends Component {
                 <CardContent className={classes.notoppad}>
                   <List className={classes.nopad}>
                     {this.state.cart.map((cartitem) => (
-                      <ListItem className={classes.nopad}>
-                        <Grid item lg="1">
+                      <ListItem
+                        key={cartitem.item.id}
+                        className={classes.nopad}
+                      >
+                        <Grid item lg={1}>
                           <ListItemIcon>
                             <i
                               className={
@@ -374,13 +377,13 @@ class Details extends Component {
                             ></i>
                           </ListItemIcon>
                         </Grid>
-                        <Grid item lg="5">
+                        <Grid item lg={5}>
                           <ListItemText
                             style={{ color: "gray" }}
                             primary={cartitem.item.item_name}
                           />
                         </Grid>
-                        <Grid item lg="3">
+                        <Grid item lg={3}>
                           <ListItemText
                             primary={
                               <Box>
@@ -409,7 +412,7 @@ class Details extends Component {
                             }
                           />
                         </Grid>
-                        <Grid item lg="3">
+                        <Grid item lg={3}>
                           <ListItemSecondaryAction>
                             <Typography>
                               ₹{" "}
